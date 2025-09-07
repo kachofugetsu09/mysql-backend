@@ -9,4 +9,5 @@ import (
 func RegisterRoutes(r *gin.Engine) {
 	// 注册路由
 	r.POST("/api/mysql/user/create", handler.CreateMySQLUser)
+	r.GET("/api/mysql/user/check", handler.CheckMySQLUser)
 }

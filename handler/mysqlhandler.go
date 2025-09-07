@@ -50,3 +50,29 @@ func CreateMySQLUser(c *gin.Context) {
 	// 返回统一响应格式
 	c.JSON(statusCode, response)
 }
+
+func CheckMySQLUser(c *gin.Context) {
+	req := &request.CheckUserRequst{}
+
+	if err := c.ShouldBindJSON(req); err != nil {
+		response := models.StandardResponse{
+			Data:         nil,
+			Error:        "INVALID_REQUEST",
+			ErrorMessage: err.Error(),
+		}
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	req.Ctx = c.Request.Context()
+
+	response := service.CheckUser(*req)
+	statusCode := http.StatusOK
+	if response.Error != "NO_ERROR" {
+		statusCode = http.StatusInternalServerError
+	}
+
+	// 返回统一响应格式
+	c.JSON(statusCode, response)
+}

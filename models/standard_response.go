@@ -11,3 +11,14 @@ type StandardResponse struct {
 type CreateUserResponse struct {
 	Success bool `json:"success"`
 }
+
+type CheckUserResponse struct {
+	UserInfos []UserInfo `json:"user_infos"`
+}
+
+type UserInfo struct {
+	Exist     bool     `json:"exist"`
+	DB        string   `json:"db"`
+	Privilege []string `json:"privilege"`
+	Plugins   []string `json:"plugins"`
+}

@@ -55,6 +55,12 @@ type CreateUserRequest struct {
 	Ctx context.Context `json:"-"` // 请求上下文
 }
 
+type CheckUserRequst struct {
+	Username []string `json:"usernames"`
+
+	Ctx context.Context `json:"-"`
+}
+
 func (r *CreateUserRequest) Validate() error {
 	if r.Username == "" {
 		return errors.New("username is required")
