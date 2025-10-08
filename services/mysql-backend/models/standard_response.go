@@ -16,6 +16,10 @@ type CheckUserResponse struct {
 	UserInfos []UserInfo `json:"user_infos"`
 }
 
+type AgentQueryResponse struct {
+	Answer string `json:"answer"`
+}
+
 type UserInfo struct {
 	Exist     bool     `json:"exist"`
 	DB        string   `json:"db"`

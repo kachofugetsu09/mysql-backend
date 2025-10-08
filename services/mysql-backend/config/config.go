@@ -14,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Log      LogConfig      `mapstructure:"log"`
+	Agent    AgentConfig    `mapstructure:"agent"`
 }
 
 // ServerConfig 服务器配置
@@ -43,6 +44,14 @@ type RedisConfig struct {
 	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
 	PoolSize int    `mapstructure:"pool_size"`
+}
+
+// AgentConfig mysql-agent服务配置
+type AgentConfig struct {
+	Host    string        `mapstructure:"host"`
+	Port    string        `mapstructure:"port"`
+	BaseURL string        `mapstructure:"base_url"`
+	Timeout time.Duration `mapstructure:"timeout"`
 }
 
 // LogConfig 日志配置
@@ -121,6 +130,12 @@ func setDefaults() {
 	// JWT默认配置
 	viper.SetDefault("jwt.secret", "your-secret-key")
 	viper.SetDefault("jwt.expire_time", "24h")
+
+	// agent默认配置
+	viper.SetDefault("agent.host", "localhost")
+	viper.SetDefault("agent.port", "8081")
+	viper.SetDefault("agent.base_url", "")
+	viper.SetDefault("agent.timeout", "5s")
 }
 
 // GetDSN 获取数据库连接字符串
@@ -154,4 +169,17 @@ func (c *Config) GetServerAddr() string {
 // GetRedisAddr 获取Redis地址
 func (c *Config) GetRedisAddr() string {
 	return fmt.Sprintf("%s:%d", c.Redis.Host, c.Redis.Port)
+}
+
+// GetAgentBaseURL 获取mysql-agent服务的基础URL
+func (c *Config) GetAgentBaseURL() string {
+	if c.Agent.BaseURL != "" {
+		return c.Agent.BaseURL
+	}
+	return fmt.Sprintf("http://%s:%s", c.Agent.Host, c.Agent.Port)
+}
+
+// GetAgentRPCAddr 返回 mysql-agent 的 RPC 地址
+func (c *Config) GetAgentRPCAddr() string {
+	return fmt.Sprintf("%s:%s", c.Agent.Host, c.Agent.Port)
 }

@@ -29,3 +29,10 @@ pool_size = 10
 level = "info"  # debug, info, warn, error
 format = "json"  # json, text
 output = "stdout"  # stdout, file
+
+# mysql-agent配置
+[agent]
+host = "localhost"
+port = "8081"
+# 可选：base_url = "http://127.0.0.1:8081"
+timeout = "5s"

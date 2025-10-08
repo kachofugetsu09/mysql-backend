@@ -1,0 +1,12 @@
+# 服务器配置
+[server]
+port = "8081"
+host = "localhost"
+mode = "debug"  # debug, release, test
+
+
+# 日志配置
+[log]
+level = "info"  # debug, info, warn, error
+format = "json"  # json, text
+output = "stdout"  # stdout, file
