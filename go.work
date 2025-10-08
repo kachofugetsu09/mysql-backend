@@ -1,5 +1,6 @@
-go 1.23.0
+go 1.25.2
 
 use (
-    ./services/mysql-backend
+	./services/mysql-agent
+	./services/mysql-backend
 )
