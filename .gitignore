@@ -6,7 +6,6 @@
 *.dylib
 *.test
 *.out
-go.work
 
 # Dependency directories
 vendor/
@@ -40,3 +39,6 @@ dist/
 # Temporary files
 tmp/
 temp/
+
+# Go build cache
+**/.gocache/
