@@ -4,9 +4,22 @@ port = "8081"
 host = "localhost"
 mode = "debug"  # debug, release, test
 
-
 # 日志配置
 [log]
 level = "info"  # debug, info, warn, error
 format = "json"  # json, text
 output = "stdout"  # stdout, file
+
+# DeepSeek API配置
+[deepseek]
+api_key = ""  # 从环境变量 DEEPSEEK_API_KEY 获取
+base_url = "https://api.deepseek.com"
+model = "deepseek-chat"
+
+# MySQL连接配置
+[mysql]
+host = "localhost"
+port = 3306
+username = "root"
+password = "123456"
+database = "mb_db"

@@ -3,14 +3,17 @@ package config
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
 // Config 全局配置结构体
 type Config struct {
-	Server ServerConfig `mapstructure:"server"`
-	Log    LogConfig    `mapstructure:"log"`
+	Server   ServerConfig   `mapstructure:"server"`
+	Log      LogConfig      `mapstructure:"log"`
+	DeepSeek DeepSeekConfig `mapstructure:"deepseek"`
+	MySQL    MySQLConfig    `mapstructure:"mysql"`
 }
 
 func (c Config) GetServerAddr() string {
@@ -29,6 +32,24 @@ type LogConfig struct {
 	Level  string `mapstructure:"level"`
 	Format string `mapstructure:"format"`
 	Output string `mapstructure:"output"`
+}
+
+// DeepSeekConfig DeepSeek API配置
+type DeepSeekConfig struct {
+	APIKey          string        `mapstructure:"api_key"`
+	BaseURL         string        `mapstructure:"base_url"`
+	Model           string        `mapstructure:"model"`
+	Timeout         time.Duration `mapstructure:"timeout"`
+	AnalysisTimeout time.Duration `mapstructure:"analysis_timeout"`
+}
+
+// MySQLConfig MySQL连接配置
+type MySQLConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	Database string `mapstructure:"database"`
 }
 
 // 全局配置实例
@@ -73,4 +94,17 @@ func setDefaults() {
 	viper.SetDefault("log.format", "json")
 	viper.SetDefault("log.output", "stdout")
 
+	// DeepSeek API默认配置
+	viper.SetDefault("deepseek.api_key", "")
+	viper.SetDefault("deepseek.base_url", "https://api.deepseek.com")
+	viper.SetDefault("deepseek.model", "deepseek-chat")
+	viper.SetDefault("deepseek.timeout", "120s")
+	viper.SetDefault("deepseek.analysis_timeout", "120s")
+
+	// MySQL默认配置
+	viper.SetDefault("mysql.host", "localhost")
+	viper.SetDefault("mysql.port", 3306)
+	viper.SetDefault("mysql.username", "root")
+	viper.SetDefault("mysql.password", "")
+	viper.SetDefault("mysql.database", "")
 }

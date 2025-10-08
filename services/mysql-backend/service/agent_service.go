@@ -20,7 +20,9 @@ type agentRPCRequest struct {
 }
 
 type agentRPCResponse struct {
-	Answer string `json:"answer"`
+	Answer  string                 `json:"answer"`
+	Sources []models.AgentSource   `json:"sources"`
+	Raw     map[string]interface{} `json:"raw"`
 }
 
 func QueryAgent(req request.AgentQueryRequest) models.StandardResponse {
@@ -94,5 +96,9 @@ func queryAgent(ctx context.Context, req request.AgentQueryRequest) (models.Agen
 		}
 	}
 
-	return models.AgentQueryResponse{Answer: rpcResp.Answer}, nil
+	return models.AgentQueryResponse{
+		Answer:  rpcResp.Answer,
+		Sources: rpcResp.Sources,
+		Raw:     rpcResp.Raw,
+	}, nil
 }

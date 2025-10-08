@@ -35,4 +35,4 @@ output = "stdout"  # stdout, file
 host = "localhost"
 port = "8081"
 # 可选：base_url = "http://127.0.0.1:8081"
-timeout = "5s"
+timeout = "120s"

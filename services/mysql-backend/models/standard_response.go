@@ -17,7 +17,17 @@ type CheckUserResponse struct {
 }
 
 type AgentQueryResponse struct {
-	Answer string `json:"answer"`
+	Answer  string                 `json:"answer"`
+	Sources []AgentSource          `json:"sources"`
+	Raw     map[string]interface{} `json:"raw"`
+}
+
+type AgentSource struct {
+	Tool        string                 `json:"tool"`
+	Description string                 `json:"description,omitempty"`
+	Status      string                 `json:"status"`
+	Params      map[string]interface{} `json:"params,omitempty"`
+	Error       string                 `json:"error,omitempty"`
 }
 
 type UserInfo struct {

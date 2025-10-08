@@ -76,6 +76,7 @@ func InitConfig() {
 	viper.SetConfigType("toml")
 	viper.AddConfigPath("./config")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("./services/mysql-backend/config")
 
 	// 设置默认值
 	setDefaults()

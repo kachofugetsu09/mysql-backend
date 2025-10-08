@@ -14,8 +14,14 @@ func main() {
 	// 初始化配置
 	config.InitConfig()
 
+	// 创建服务实例
+	service, err := agent.NewService()
+	if err != nil {
+		log.Fatalf("创建服务失败: %v", err)
+	}
+
 	rpcServer := rpc.NewServer()
-	if err := rpcServer.RegisterName("Agent", &agent.Service{}); err != nil {
+	if err := rpcServer.RegisterName("Agent", service); err != nil {
 		log.Fatalf("注册 RPC 服务失败: %v", err)
 	}
 
