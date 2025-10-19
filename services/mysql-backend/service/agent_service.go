@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/rpc"
@@ -13,16 +14,17 @@ import (
 	"mysql-backend/request"
 )
 
-type agentRPCRequest struct {
-	Query      string            `json:"query"`
-	InstanceID string            `json:"instance"`
-	Params     map[string]string `json:"params,omitempty"`
+type agentToolCall struct {
+	Name   string          `json:"name"`
+	Args   json.RawMessage `json:"args,omitempty"`
+	Reason string          `json:"reason,omitempty"`
 }
 
-type agentRPCResponse struct {
-	Answer  string                 `json:"answer"`
-	Sources []models.AgentSource   `json:"sources"`
-	Raw     map[string]interface{} `json:"raw"`
+type agentRPCRequest struct {
+	Query          string            `json:"query"`
+	Tools          []agentToolCall   `json:"tools,omitempty"`
+	TimeoutSeconds int               `json:"timeout_seconds,omitempty"`
+	Context        map[string]string `json:"context,omitempty"`
 }
 
 func QueryAgent(req request.AgentQueryRequest) models.StandardResponse {
@@ -76,11 +78,24 @@ func queryAgent(ctx context.Context, req request.AgentQueryRequest) (models.Agen
 	client := rpc.NewClientWithCodec(jsonrpc.NewClientCodec(conn))
 	defer client.Close()
 
-	rpcReq := agentRPCRequest{
-		Query: req.Query,
+	toolCalls := make([]agentToolCall, 0, len(req.Tools))
+	for _, t := range req.Tools {
+		toolCalls = append(toolCalls, agentToolCall{Name: t.Name, Args: t.Args, Reason: t.Reason})
 	}
 
-	var rpcResp agentRPCResponse
+	timeoutSeconds := req.TimeoutSeconds
+	if timeoutSeconds <= 0 && agentCfg.Timeout > 0 {
+		timeoutSeconds = int(agentCfg.Timeout / time.Second)
+	}
+
+	rpcReq := agentRPCRequest{
+		Query:          req.Query,
+		Tools:          toolCalls,
+		TimeoutSeconds: timeoutSeconds,
+		Context:        req.Context,
+	}
+
+	var rpcResp models.AgentQueryResponse
 	done := make(chan error, 1)
 	go func() {
 		done <- client.Call("Agent.Query", rpcReq, &rpcResp)
@@ -96,9 +111,5 @@ func queryAgent(ctx context.Context, req request.AgentQueryRequest) (models.Agen
 		}
 	}
 
-	return models.AgentQueryResponse{
-		Answer:  rpcResp.Answer,
-		Sources: rpcResp.Sources,
-		Raw:     rpcResp.Raw,
-	}, nil
+	return rpcResp, nil
 }

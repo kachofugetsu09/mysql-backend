@@ -1,47 +1,45 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net"
-	"net/rpc"
-	"net/rpc/jsonrpc"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"mysql-agent/agent"
 	"mysql-agent/config"
+	"mysql-agent/databases"
 )
 
 func main() {
-	// 初始化配置
 	config.InitConfig()
 
-	// 创建服务实例
-	service, err := agent.NewService()
-	if err != nil {
-		log.Fatalf("创建服务失败: %v", err)
-	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	rpcServer := rpc.NewServer()
-	if err := rpcServer.RegisterName("Agent", service); err != nil {
-		log.Fatalf("注册 RPC 服务失败: %v", err)
+	if err := databases.InitDB(); err != nil {
+		log.Fatalf("初始化数据库失败: %v", err)
 	}
-
-	addr := config.AppConfig.GetServerAddr()
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Fatalf("监听 %s 失败: %v", addr, err)
-	}
-	log.Printf("RPC 服务器已启动，监听地址: %s", addr)
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
-				log.Printf("临时连接错误: %v", err)
-				continue
-			}
-			log.Fatalf("接受连接失败: %v", err)
+	defer func() {
+		if err := databases.CloseDB(); err != nil {
+			log.Printf("关闭数据库失败: %v", err)
 		}
+	}()
 
-		go rpcServer.ServeCodec(jsonrpc.NewServerCodec(conn))
+	if _, err := agent.ChatModel(ctx); err != nil {
+		log.Fatalf("初始化deepseek模型失败: %v", err)
+	}
+	if names, err := agent.ToolNames(ctx); err != nil {
+		log.Printf("注册工具失败: %v", err)
+	} else {
+		log.Printf("已注册工具: %v", names)
+	}
+
+	log.Printf("RPC 服务监听: %s", config.AppConfig.GetServerAddr())
+	log.Printf("数据库DSN: %s", config.AppConfig.GetDSN())
+
+	if err := runRPCServer(ctx); err != nil {
+		log.Fatalf("服务运行失败: %v", err)
 	}
 }

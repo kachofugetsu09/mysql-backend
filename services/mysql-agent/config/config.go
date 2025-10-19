@@ -8,103 +8,104 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config 全局配置结构体
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
+	Database DatabaseConfig `mapstructure:"database"`
 	Log      LogConfig      `mapstructure:"log"`
-	DeepSeek DeepSeekConfig `mapstructure:"deepseek"`
-	MySQL    MySQLConfig    `mapstructure:"mysql"`
 }
 
-func (c Config) GetServerAddr() string {
-	return fmt.Sprintf("%s:%s", c.Server.Host, c.Server.Port)
-}
-
-// ServerConfig 服务器配置
 type ServerConfig struct {
-	Port string `mapstructure:"port"`
 	Host string `mapstructure:"host"`
+	Port string `mapstructure:"port"`
 	Mode string `mapstructure:"mode"`
 }
 
-// LogConfig 日志配置
+type DatabaseConfig struct {
+	Host            string        `mapstructure:"host"`
+	Port            int           `mapstructure:"port"`
+	Username        string        `mapstructure:"username"`
+	Password        string        `mapstructure:"password"`
+	DBName          string        `mapstructure:"dbname"`
+	Charset         string        `mapstructure:"charset"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+	MaxOpenConns    int           `mapstructure:"max_open_conns"`
+	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
+}
+
 type LogConfig struct {
 	Level  string `mapstructure:"level"`
 	Format string `mapstructure:"format"`
 	Output string `mapstructure:"output"`
 }
 
-// DeepSeekConfig DeepSeek API配置
-type DeepSeekConfig struct {
-	APIKey          string        `mapstructure:"api_key"`
-	BaseURL         string        `mapstructure:"base_url"`
-	Model           string        `mapstructure:"model"`
-	Timeout         time.Duration `mapstructure:"timeout"`
-	AnalysisTimeout time.Duration `mapstructure:"analysis_timeout"`
-}
-
-// MySQLConfig MySQL连接配置
-type MySQLConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	Database string `mapstructure:"database"`
-}
-
-// 全局配置实例
 var AppConfig *Config
 
-// InitConfig 初始化配置
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
 	viper.AddConfigPath("./config")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("./services/mysql-agent/config")
 
-	// 设置默认值
 	setDefaults()
 
-	// 读取配置文件
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Error reading config file: %v", err)
-		log.Println("Using default configuration")
+		log.Printf("读取配置失败: %v", err)
+		log.Print("使用默认配置")
 	} else {
-		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+		log.Printf("使用配置文件: %s", viper.ConfigFileUsed())
 	}
 
-	// 解析配置到结构体
-	AppConfig = &Config{}
-	if err := viper.Unmarshal(AppConfig); err != nil {
-		log.Fatalf("Unable to decode into struct: %v", err)
+	cfg := &Config{}
+	if err := viper.Unmarshal(cfg); err != nil {
+		log.Fatalf("解析配置失败: %v", err)
 	}
 
-	log.Printf("Configuration loaded successfully")
+	AppConfig = cfg
+	log.Print("配置加载完成")
 }
 
-// setDefaults 设置默认配置值
 func setDefaults() {
-	// 服务器默认配置
-	viper.SetDefault("server.port", "8081")
 	viper.SetDefault("server.host", "localhost")
+	viper.SetDefault("server.port", "8081")
 	viper.SetDefault("server.mode", "debug")
 
-	// 日志默认配置
+	viper.SetDefault("database.host", "localhost")
+	viper.SetDefault("database.port", 3306)
+	viper.SetDefault("database.username", "root")
+	viper.SetDefault("database.password", "123456")
+	viper.SetDefault("database.dbname", "mb_db")
+	viper.SetDefault("database.charset", "utf8mb4")
+	viper.SetDefault("database.max_idle_conns", 10)
+	viper.SetDefault("database.max_open_conns", 100)
+	viper.SetDefault("database.conn_max_lifetime", "1h")
+
 	viper.SetDefault("log.level", "info")
 	viper.SetDefault("log.format", "json")
 	viper.SetDefault("log.output", "stdout")
+}
 
-	// DeepSeek API默认配置
-	viper.SetDefault("deepseek.api_key", "")
-	viper.SetDefault("deepseek.base_url", "https://api.deepseek.com")
-	viper.SetDefault("deepseek.model", "deepseek-chat")
-	viper.SetDefault("deepseek.timeout", "120s")
-	viper.SetDefault("deepseek.analysis_timeout", "120s")
+func (c *Config) GetDSN() string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
+		c.Database.Username,
+		c.Database.Password,
+		c.Database.Host,
+		c.Database.Port,
+		c.Database.DBName,
+		c.Database.Charset,
+	)
+}
 
-	// MySQL默认配置
-	viper.SetDefault("mysql.host", "localhost")
-	viper.SetDefault("mysql.port", 3306)
-	viper.SetDefault("mysql.username", "root")
-	viper.SetDefault("mysql.password", "")
-	viper.SetDefault("mysql.database", "")
+func (c *Config) GetAdminDSN() string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/?charset=%s&parseTime=True&loc=Local",
+		c.Database.Username,
+		c.Database.Password,
+		c.Database.Host,
+		c.Database.Port,
+		c.Database.Charset,
+	)
+}
+
+func (c *Config) GetServerAddr() string {
+	return fmt.Sprintf("%s:%s", c.Server.Host, c.Server.Port)
 }

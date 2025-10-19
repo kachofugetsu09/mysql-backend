@@ -17,17 +17,23 @@ type CheckUserResponse struct {
 }
 
 type AgentQueryResponse struct {
-	Answer  string                 `json:"answer"`
-	Sources []AgentSource          `json:"sources"`
-	Raw     map[string]interface{} `json:"raw"`
+	Analysis AgentAnalysis          `json:"analysis"`
+	ToolRuns []AgentToolRun         `json:"tool_runs"`
+	Raw      map[string]interface{} `json:"raw,omitempty"`
 }
 
-type AgentSource struct {
-	Tool        string                 `json:"tool"`
-	Description string                 `json:"description,omitempty"`
-	Status      string                 `json:"status"`
-	Params      map[string]interface{} `json:"params,omitempty"`
-	Error       string                 `json:"error,omitempty"`
+type AgentAnalysis struct {
+	Summary string `json:"summary,omitempty"`
+	Error   string `json:"error,omitempty"`
+}
+
+type AgentToolRun struct {
+	Name       string      `json:"name"`
+	Reason     string      `json:"reason,omitempty"`
+	Input      interface{} `json:"input,omitempty"`
+	Output     interface{} `json:"output,omitempty"`
+	Error      string      `json:"error,omitempty"`
+	DurationMs int64       `json:"duration_ms"`
 }
 
 type UserInfo struct {
